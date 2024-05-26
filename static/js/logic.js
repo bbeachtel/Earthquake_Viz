@@ -1,7 +1,5 @@
 // Function to create the map and add the layers
 function createMap(markers) {
-    console.log("Creating map...");
-
     // Create the tile layers
     let cartoDBPositron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -33,15 +31,50 @@ function createMap(markers) {
     L.control.layers(baseMaps, overlayMaps, {
         collapsed: false
     }).addTo(map);
-
-    console.log("Map created successfully");
 }
+
+// Function to determine marker size based on magnitude
+function getMarkerSize(magnitude) {
+    return magnitude * 4;
+}
+
+// Function to determine marker color based on depth
+function getMarkerColor(depth) {
+    return depth > 90 ? '#d73027' :
+        depth > 70 ? '#fc8d59' :
+        depth > 50 ? '#fee08b' :
+        depth > 30 ? '#d9ef8b' :
+        depth > 10 ? '#91cf60' :'#1a9850';
+}
+// Legend Creation
+document.addEventListener('DOMContentLoaded', function () {
+    // Define legend colors and labels
+    const legendColors = ['#1a9850', '#91cf60', '#d9ef8b', '#fee08b', '#fc8d59', '#d73027'];
+    const legendLabels = ['0-10', '10-30', '30-50', '50-70', '70-90', '90+'];
+
+    // Create legend container
+    const legendContainer = document.createElement('div');
+    legendContainer.id = 'legend';
+    legendContainer.classList.add('legend');
+
+    // Add legend title
+    const legendTitle = document.createElement('h4');
+    legendTitle.textContent = 'Earthquake Depth';
+    legendContainer.appendChild(legendTitle);
+
+    // Create legend items
+    for (let i = 0; i < legendColors.length; i++) {
+        const legendItem = document.createElement('div');
+        legendItem.innerHTML = `<i style="background: ${legendColors[i]}"></i><span>${legendLabels[i]}</span>`;
+        legendContainer.appendChild(legendItem);
+    }
+
+    // Add legend to body
+    document.body.appendChild(legendContainer);
+});
 
 // Function to create markers from the GeoJSON response
 function createMarkers(response) {
-    // Log the entire response to ensure we are getting data
-    console.log("API Response:", response);
-
     // Pull the "features" property from the response
     let features = response.features;
 
@@ -53,23 +86,24 @@ function createMarkers(response) {
         let feature = features[i];
         let long = feature.geometry.coordinates[0]; // Longitude
         let lat = feature.geometry.coordinates[1];  // Latitude
-        let depth = feature.geometry.coordinates[2];
-        let mag = feature.properties.mag;
+        let depth = feature.geometry.coordinates[2]; // Depth
+        let mag = feature.properties.mag; // Magnitude
         let title = feature.properties.title || "No title available";
+        let place = feature.properties.place || "Unknown location";
 
-        // Log each feature's coordinates and title to verify data parsing
-        console.log("Feature:", { lat, long, title });
-
-        // Create a marker for each feature, and bind a popup with the feature's title
-        let featureMarker = L.marker([lat, long])
-            .bindPopup("<h3>" + title + "</h3>");
+        // Create a circle marker with size based on magnitude and color based on depth
+        let featureMarker = L.circleMarker([lat, long], {
+            radius: getMarkerSize(mag),
+            fillColor: getMarkerColor(depth),
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).bindPopup("<h3>" + title + "</h3><hr><p>Magnitude: " + mag + "<br>Location: " + place + "<br>Depth: " + depth + "</p>");
 
         // Add the marker to the featuresArray
         featuresArray.push(featureMarker);
     }
-
-    // Log the featuresArray to ensure markers are being created
-    console.log("Features Array:", featuresArray);
 
     // Create a layer group from the feature markers array, and pass it to the createMap function
     let markers = L.layerGroup(featuresArray);
