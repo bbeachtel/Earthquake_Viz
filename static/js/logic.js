@@ -31,6 +31,9 @@ function createMap(markers) {
     L.control.layers(baseMaps, overlayMaps, {
         collapsed: false
     }).addTo(map);
+
+    // Add legend
+    addLegend(map);
 }
 
 // Function to determine marker size based on magnitude
@@ -42,36 +45,33 @@ function getMarkerSize(magnitude) {
 function getMarkerColor(depth) {
     return depth > 90 ? '#d73027' :
         depth > 70 ? '#fc8d59' :
-        depth > 50 ? '#fee08b' :
-        depth > 30 ? '#d9ef8b' :
-        depth > 10 ? '#91cf60' :'#1a9850';
+            depth > 50 ? '#fee08b' :
+                depth > 30 ? '#d9ef8b' :
+                    depth > 10 ? '#91cf60' : '#1a9850';
 }
-// Legend Creation
-document.addEventListener('DOMContentLoaded', function () {
-    // Define legend colors and labels
-    const legendColors = ['#1a9850', '#91cf60', '#d9ef8b', '#fee08b', '#fc8d59', '#d73027'];
-    const legendLabels = ['0-10', '10-30', '30-50', '50-70', '70-90', '90+'];
 
-    // Create legend container
-    const legendContainer = document.createElement('div');
-    legendContainer.id = 'legend';
-    legendContainer.classList.add('legend');
+// Function to add legend to the map
+function addLegend(map) {
+    const legend = L.control({ position: 'bottomleft' });
 
-    // Add legend title
-    const legendTitle = document.createElement('h4');
-    legendTitle.textContent = 'Earthquake Depth';
-    legendContainer.appendChild(legendTitle);
+    legend.onAdd = function () {
+        const div = L.DomUtil.create('div', 'legend');
+        const grades = [0, 10, 30, 50, 70, 90];
+        const colors = ['#1a9850', '#91cf60', '#d9ef8b', '#fee08b', '#fc8d59', '#d73027'];
 
-    // Create legend items
-    for (let i = 0; i < legendColors.length; i++) {
-        const legendItem = document.createElement('div');
-        legendItem.innerHTML = `<i style="background: ${legendColors[i]}"></i><span>${legendLabels[i]}</span>`;
-        legendContainer.appendChild(legendItem);
-    }
+        div.innerHTML = '<h4>Earthquake Depth</h4>';
 
-    // Add legend to body
-    document.body.appendChild(legendContainer);
-});
+        for (let i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + colors[i] + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+        }
+
+        return div;
+    };
+
+    legend.addTo(map);
+}
 
 // Function to create markers from the GeoJSON response
 function createMarkers(response) {
@@ -112,5 +112,10 @@ function createMarkers(response) {
 
 // Perform an API call to the USGS Earthquake API to get the earthquake information. Call createMarkers when it completes.
 d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(createMarkers).catch(error => {
+    console.error('Error fetching data:', error);
+});
+
+// Perform API call to Fraxen Tectonic Plates to get plate boundaries
+d3.json('https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json').then(createMarkers).catch(error => {
     console.error('Error fetching data:', error);
 });
