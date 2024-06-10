@@ -4,7 +4,7 @@ This project visualizes earthquake data on an interactive map using the Leaflet 
 
 ## Introduction
 
-The Earthquake Visualization project leverages Leaflet, a popular JavaScript library, to create an interactive map that displays earthquake data sourced from the USGS Earthquake API. Each data point on the map corresponds to an earthquake event, with its size indicating the magnitude and its color representing the depth of the earthquake.
+This earthquake visualization leverages Leaflet, a popular JavaScript library, to create an interactive map that displays earthquake data sourced from the USGS Earthquake API. Each data point on the map corresponds to an earthquake event, with its size indicating the magnitude and its color representing the depth of the earthquake.
 
 ## Features
 
